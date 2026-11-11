@@ -476,7 +476,14 @@ footer{padding:26px 16px 36px;font-size:.9rem}
 #welcomeGuideDialog button.guide-secondary{background:transparent}
 #welcomeGuideDialog .guide-count{font-size:.85rem;color:#e6d8fc}
 </style>
-</head>
+<style id="help10Styles">
+.help10 details {border:1px solid var(--theme-accent,#9671bd);border-radius:14px;margin:10px 0;padding:0 14px;background:rgba(151,112,195,.09)}
+.help10 summary {cursor:pointer;font-weight:650;padding:15px 0;line-height:1.5;list-style-position:inside}
+.help10 details p {margin:0 0 16px;line-height:1.65}
+.help10 summary:focus-visible,.help10 button:focus-visible {outline:3px solid #b69ae5;outline-offset:3px}
+.help10 h3 {margin-top:26px}
+@media(max-width:480px){.help10 details {padding:0 11px}.help10 summary{padding:16px 0}}
+</style></head>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 <script>
@@ -496,6 +503,7 @@ footer{padding:26px 16px 36px;font-size:.9rem}
   <button type="button" data-page="week">🗓️ Veckoplanering</button><button type="button" data-page="kickoff">🌱 Hjälp mig komma igång</button><button type="button" data-page="steps">👣 Små steg</button><button type="button" data-page="pause">☕ Pauskompis</button><button type="button" data-page="ideas">💡 Idébank</button>
   <button type="button" data-page="progress">💜 Mina framsteg</button><button type="button" data-page="routines">🌅 Mina rutiner</button><button type="button" data-page="reminders">🔔 Mina påminnelser</button>
   <button type="button" data-page="ai">💜 AI-kompisen (demo)</button><button type="button" data-page="settings">⚙️ Inställningar</button><button type="button" data-page="backup">💾 Säkerhetskopia</button>
+<button type="button" data-page="help">❓ Hjälp och information</button>
 <button type="button" id="welcomeGuideOpen" aria-label="Visa välkomstguiden">💜 Välkomstguide</button>
 </nav><p>En sak i taget. Du bestämmer takten.</p></header>
       <main>
@@ -667,6 +675,27 @@ footer{padding:26px 16px 36px;font-size:.9rem}
 <textarea id="aiInput" maxlength="600" placeholder="Till exempel: Jag behöver hjälp att komma igång med städningen"></textarea>
 <div class="actions"><button type="button" id="aiSend">Skicka</button><button type="button" class="alt" id="aiClear">Rensa chatten</button></div>
 <p class="small">Den här demon fungerar utan internet. Riktig AI kräver senare en säker serveranslutning och tydligt samtycke för eventuellt minne.</p>
+</section><section id="helpPage" hidden aria-labelledby="helpHeading" class="help10">
+<h2 id="helpHeading">❓ Hjälp och information</h2>
+<p>Här hittar du svar i din egen takt. Tryck på en fråga för att läsa mer.</p>
+<h3>🌱 Kom igång</h3>
+<details><summary>Hur lägger jag till en uppgift?</summary><p>Öppna menyn och välj <strong>Ny uppgift</strong>. Skriv vad du vill göra och spara. Under <strong>Mina uppgifter</strong> kan du se och redigera den.</p></details>
+<details><summary>Hur får jag hjälp med små steg?</summary><p>Välj <strong>Hjälp mig komma igång</strong> eller <strong>Små steg</strong> i menyn. Du kan ta en sak i taget och pausa när du behöver.</p></details>
+<details><summary>Hur planerar jag min dag?</summary><p>Öppna <strong>Min dag</strong> eller <strong>Mitt dagsschema</strong>. Välj det som passar dig och din energinivå.</p></details>
+<h3>🌅 Rutiner och påminnelser</h3>
+<details><summary>Hur skapar jag en rutin?</summary><p>Öppna <strong>Mina rutiner</strong> och skapa en morgon- eller kvällsrutin med egna steg.</p></details>
+<details><summary>Hur fungerar påminnelser?</summary><p>Öppna <strong>Mina påminnelser</strong>. Påminnelser i appen kan kräva att appen är öppen; räkna inte med att en stängd webbläsare alltid ger en avisering.</p></details>
+<h3>📴 Offline och säkerhetskopiering</h3>
+<details><summary>Kan jag använda Fokuskompisen utan internet?</summary><p>Appen kan öppnas offline efter att den har laddats in tidigare. I våra tester har sparade uppgifter och rutiner gått att läsa och redigera offline, och ändringar har synkroniserats efter återanslutning. Vissa funktioner, som inloggning på en ny enhet, kräver internet.</p></details>
+<details><summary>Hur laddar jag ner en säkerhetskopia?</summary><p>Välj <strong>Säkerhetskopia</strong> i menyn och klicka på <strong>Ladda ner säkerhetskopia</strong>. Förvara JSON-filen säkert: den kan innehålla personliga uppgifter.</p></details>
+<details><summary>Vad händer om jag importerar en säkerhetskopia?</summary><p>Import kan ersätta uppgifter och rutiner på det inloggade kontot. Läs bekräftelsen noga och spara gärna en aktuell säkerhetskopia först.</p></details>
+<h3>🔐 Konto och integritet</h3>
+<details><summary>Var sparas mina uppgifter?</summary><p>Fokuskompisen använder lokal lagring i webbläsaren för offlinearbete och Supabase för synkronisering när du är inloggad. Delade enheter kan behålla lokal information; logga ut och skydda enheten.</p></details>
+<details><summary>Hur skyddar jag mitt konto?</summary><p>Använd ett unikt lösenord, dela det inte med andra och logga ut på delade enheter. Spara inte känsliga uppgifter i testfunktioner.</p></details>
+<details><summary>Var finns integritetspolicyn?</summary><p>En fullständig integritetspolicy och kontaktväg behöver publiceras innan Fokuskompisen lanseras för allmänheten. Den här hjälpsidan ersätter inte en integritetspolicy.</p></details>
+<h3>💜 Mer hjälp</h3>
+<p><button type="button" id="helpOpenWelcome10">Visa välkomstguiden igen</button></p>
+<p class="small">Kontakt och feedback: en officiell kontaktväg läggs till inför lanseringen.</p>
 </section></main><footer>Fokuskompisen 1.0 DESIGNTEST 💜 · Sparar lokalt på enheten · Säkerhetskopiera regelbundet · Fungerar utan internet</footer>
 <script> const menuButton = document.getElementById("menuButton");
 const mainMenu = document.getElementById("mainMenu");
@@ -686,7 +715,8 @@ const pages = {
   reminders: "remindersPage",
     backup: "backupPage",
   ai: "aiPage",
-  settings: "settingsPage"
+  settings: "settingsPage",
+  help: "helpPage"
 };
   // 0.8: behåll navigeringen när webbläsaren växlar flik eller auth förnyas.
   const NAV_KEY_08 = "fokuskompisen08navigation";
@@ -717,6 +747,9 @@ const pages = {
     mainMenu.hidden = true;
     menuButton.setAttribute("aria-expanded", "false");
   });
+});
+document.getElementById("helpOpenWelcome10").addEventListener("click", () => {
+  document.getElementById("welcomeGuideOpen").click();
 });
 menuButton.addEventListener("click", () => {
   if (headerActions.hidden) return;
