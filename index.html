@@ -463,6 +463,19 @@ footer{padding:26px 16px 36px;font-size:.9rem}
 @media(prefers-reduced-motion:reduce){button{transition:none}}
 
 </style>
+<style id="welcome-guide-style">
+#welcomeGuideOverlay[hidden]{display:none!important}
+#welcomeGuideOverlay{position:fixed;inset:0;z-index:9999;background:rgba(13,8,29,.82);display:flex;align-items:center;justify-content:center;padding:18px}
+#welcomeGuideDialog{box-sizing:border-box;width:min(100%,470px);max-height:90vh;overflow:auto;background:#25163e;color:#fff;border:1px solid #a88ad3;border-radius:22px;padding:26px;box-shadow:0 20px 70px rgba(0,0,0,.5);text-align:center}
+#welcomeGuideDialog h2{font-size:1.45rem;line-height:1.3;margin:12px 0}
+#welcomeGuideDialog p{line-height:1.6;color:#f0e8ff}
+#welcomeGuideDialog .guide-symbol{font-size:2.5rem}
+#welcomeGuideDialog .guide-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;justify-content:center}
+#welcomeGuideDialog button{min-height:44px;border-radius:12px;padding:10px 16px;border:1px solid #b8a3e0;background:#7452aa;color:#fff;font:inherit;cursor:pointer}
+#welcomeGuideDialog button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#welcomeGuideDialog button.guide-secondary{background:transparent}
+#welcomeGuideDialog .guide-count{font-size:.85rem;color:#e6d8fc}
+</style>
 </head>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -483,6 +496,7 @@ footer{padding:26px 16px 36px;font-size:.9rem}
   <button type="button" data-page="week">🗓️ Veckoplanering</button><button type="button" data-page="kickoff">🌱 Hjälp mig komma igång</button><button type="button" data-page="steps">👣 Små steg</button><button type="button" data-page="pause">☕ Pauskompis</button><button type="button" data-page="ideas">💡 Idébank</button>
   <button type="button" data-page="progress">💜 Mina framsteg</button><button type="button" data-page="routines">🌅 Mina rutiner</button><button type="button" data-page="reminders">🔔 Mina påminnelser</button>
   <button type="button" data-page="ai">💜 AI-kompisen (demo)</button><button type="button" data-page="settings">⚙️ Inställningar</button><button type="button" data-page="backup">💾 Säkerhetskopia</button>
+<button type="button" id="welcomeGuideOpen" aria-label="Visa välkomstguiden">💜 Välkomstguide</button>
 </nav><p>En sak i taget. Du bestämmer takten.</p></header>
       <main>
       <section id="loginSection" class="panel" aria-label="Inloggning">
@@ -2026,4 +2040,69 @@ if (backupPickerLabel) backupPickerLabel.addEventListener('keydown', event => {
   render();
 })();
 
-</script></body></html>
+</script><div id="welcomeGuideOverlay" hidden>
+  <div id="welcomeGuideDialog" role="dialog" aria-modal="true" aria-labelledby="welcomeGuideTitle" aria-describedby="welcomeGuideText" tabindex="-1">
+    <div class="guide-symbol" id="welcomeGuideSymbol" aria-hidden="true">💜</div>
+    <p class="guide-count" id="welcomeGuideCount">Steg 1 av 4</p>
+    <h2 id="welcomeGuideTitle">Välkommen till Fokuskompisen!</h2>
+    <p id="welcomeGuideText">En sak i taget. Du bestämmer takten.</p>
+    <div class="guide-actions">
+      <button type="button" class="guide-secondary" id="welcomeGuideSkip">Hoppa över</button>
+      <button type="button" class="guide-secondary" id="welcomeGuideBack">Tillbaka</button>
+      <button type="button" id="welcomeGuideNext">Nästa</button>
+    </div>
+  </div>
+</div>
+<script id="welcome-guide-script">
+(()=>{
+  'use strict';
+  const steps=[
+    ['💜','Välkommen till Fokuskompisen!','Här får du hjälp att göra vardagen lite enklare. En sak i taget. Du bestämmer takten.'],
+    ['✅','Planera dina uppgifter','Lägg till det du behöver göra. Du kan få hjälp att dela upp stora uppgifter i små steg.'],
+    ['🌅','Skapa dina rutiner','Bygg morgon- och kvällsrutiner som passar dig. Du bestämmer vad som ska ingå.'],
+    ['🌱','Anpassa efter din energi','Välj hur mycket energi du har idag. Du får ta saker i din egen takt.']
+  ];
+  const byId=id=>document.getElementById(id);
+  const overlay=byId('welcomeGuideOverlay');
+  const dialog=byId('welcomeGuideDialog');
+  let step=0,previousFocus=null,lastAccount=null;
+  function key(){return 'fokuskompisen10welcome-v1-'+(typeof activeUserId!=='undefined'&&activeUserId?activeUserId:'device');}
+  function draw(){
+    const [symbol,title,description]=steps[step];
+    byId('welcomeGuideSymbol').textContent=symbol;
+    byId('welcomeGuideTitle').textContent=title;
+    byId('welcomeGuideText').textContent=description;
+    byId('welcomeGuideCount').textContent=`Steg ${step+1} av ${steps.length}`;
+    byId('welcomeGuideBack').hidden=step===0;
+    byId('welcomeGuideNext').textContent=step===steps.length-1?'Kom igång':'Nästa';
+  }
+  function open(){previousFocus=document.activeElement;step=0;draw();overlay.hidden=false;byId('welcomeGuideSkip').focus();}
+  function close(){overlay.hidden=true;try{localStorage.setItem(key(),'seen');}catch(_){};if(previousFocus&&previousFocus.isConnected)previousFocus.focus();}
+  byId('welcomeGuideOpen').addEventListener('click',open);
+  byId('welcomeGuideSkip').addEventListener('click',close);
+  byId('welcomeGuideBack').addEventListener('click',()=>{step=Math.max(0,step-1);draw();});
+  byId('welcomeGuideNext').addEventListener('click',()=>{if(step===steps.length-1)close();else{step++;draw();}});
+  overlay.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();close();}
+    if(event.key==='Tab'){
+      const buttons=[...dialog.querySelectorAll('button:not([hidden])')];
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
+  function check(){
+    const actions=byId('headerActions');
+    if(actions.hidden){lastAccount=null;return;}
+    const account=typeof activeUserId!=='undefined'&&activeUserId?activeUserId:null;
+    if(!account||account===lastAccount)return;
+    lastAccount=account;
+    try{if(localStorage.getItem(key())!=='seen')open();}catch(_){open();}
+  }
+  new MutationObserver(check).observe(byId('headerActions'),{attributes:true,attributeFilter:['hidden']});
+  // Kontoinläsning sker asynkront; observera bara synliga app-sidor, inte kontodata.
+  new MutationObserver(check).observe(byId('homePage'),{attributes:true,attributeFilter:['hidden']});
+  check();
+})();
+</script>
+</body></html>
