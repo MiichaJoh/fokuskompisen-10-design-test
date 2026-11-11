@@ -504,6 +504,7 @@ footer{padding:26px 16px 36px;font-size:.9rem}
   <button type="button" data-page="progress">💜 Mina framsteg</button><button type="button" data-page="routines">🌅 Mina rutiner</button><button type="button" data-page="reminders">🔔 Mina påminnelser</button>
   <button type="button" data-page="ai">💜 AI-kompisen (demo)</button><button type="button" data-page="settings">⚙️ Inställningar</button><button type="button" data-page="backup">💾 Säkerhetskopia</button>
 <button type="button" data-page="help">❓ Hjälp och information</button>
+<button type="button" id="deleteAccountButton" style="color:#b42332;font-weight:700">🗑️ Radera mitt konto</button>
 <button type="button" id="welcomeGuideOpen" aria-label="Visa välkomstguiden">💜 Välkomstguide</button>
 </nav><p>En sak i taget. Du bestämmer takten.</p></header>
       <main>
@@ -1909,6 +1910,68 @@ headerLogout.addEventListener("click", async () => {
   } catch (error) {
     loginStatus.textContent = "Det gick inte att logga ut just nu.";
   } finally { headerLogout.disabled = false; }
+});
+
+// Kontoradering: endast den inloggade användaren, med dubbel bekräftelse.
+// Edge Function måste verifiera användarens token på serversidan.
+const deleteAccountButton = document.getElementById("deleteAccountButton");
+deleteAccountButton.addEventListener("click", async () => {
+  mainMenu.hidden = true;
+  menuButton.setAttribute("aria-expanded", "false");
+  if (!navigator.onLine) {
+    alert("Du behöver internet för att radera kontot.");
+    return;
+  }
+  const { data: sessionData, error: sessionError } = await fokusSupabase.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (sessionError || !user || user.id !== activeUserId) {
+    alert("Vi kunde inte bekräfta ditt konto. Logga in igen och försök på nytt.");
+    return;
+  }
+  if (!confirm("VARNING! Ditt konto och dess sparade uppgifter i molnet kommer att raderas permanent. Detta går inte att ångra. Vill du fortsätta?")) return;
+  const confirmation = prompt('Skriv RADERA för att bekräfta permanent kontoradering:');
+  if (confirmation !== "RADERA") {
+    if (confirmation !== null) alert("Kontot har inte raderats.");
+    return;
+  }
+  deleteAccountButton.disabled = true;
+  deleteAccountButton.textContent = "⏳ Raderar kontot…";
+  try {
+    const { data, error } = await fokusSupabase.functions.invoke("delete-account", {
+      method: "POST",
+      body: {},
+    });
+    if (error || data?.message !== "Kontot har raderats.") {
+      throw new Error("Servern bekräftade inte kontoraderingen.");
+    }
+    // Stoppa väntande synkronisering och ta bort kontobunden lokal data.
+    clearTimeout(syncTimer);
+    accountGeneration++;
+    syncReady = false;
+    activeUserId = null;
+    try {
+      localStorage.removeItem(accountKey(user.id));
+      localStorage.removeItem(pendingKey(user.id));
+      const prefixes = ["fokuskompisen09-routine-draft:" + user.id + ":"];
+      const exactKeys = ["fokuskompisen09-kickoff:" + user.id,
+        "fokuskompisen10-welcome:" + user.id];
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (prefixes.some(prefix => key.startsWith(prefix)) || exactKeys.includes(key))) localStorage.removeItem(key);
+      }
+      sessionStorage.removeItem(NAV_KEY_08);
+    } catch (_) { /* Lagring kan vara blockerad. */ }
+    await fokusSupabase.auth.signOut({ scope: "local" });
+    state = safeState(null);
+    displayAuthState(null);
+    loginStatus.textContent = "Ditt konto har raderats. 💜";
+    alert("Ditt konto har raderats. 💜");
+  } catch (err) {
+    alert("Kontoraderingen kunde inte bekräftas. Försök inte flera gånger direkt. Kontakta fokuskompisen.app@gmail.com om du är osäker.");
+  } finally {
+    deleteAccountButton.disabled = false;
+    deleteAccountButton.textContent = "🗑️ Radera mitt konto";
+  }
 });
 
 document.getElementById("saveNewPasswordButton").addEventListener("click", async () => {
