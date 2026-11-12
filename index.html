@@ -1937,7 +1937,7 @@ deleteAccountButton.addEventListener("click", async () => {
   deleteAccountButton.disabled = true;
   deleteAccountButton.textContent = "⏳ Raderar kontot…";
   try {
-    const { data, error } = await fokusSupabase.functions.invoke("delete-account", {
+    const { data, error } = await fokusSupabase.functions.invoke("delete-account---", {
       method: "POST",
       body: {},
         headers: {
