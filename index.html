@@ -1940,6 +1940,9 @@ deleteAccountButton.addEventListener("click", async () => {
     const { data, error } = await fokusSupabase.functions.invoke("delete-account", {
       method: "POST",
       body: {},
+        headers: {
+  Authorization: `Bearer ${sessionData.session.access_token}`,
+},
     });
     if (error || data?.message !== "Kontot har raderats.") {
       throw new Error("Servern bekräftade inte kontoraderingen.");
